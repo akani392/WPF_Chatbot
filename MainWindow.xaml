@@ -6,28 +6,136 @@
         xmlns:local="clr-namespace:WPF_Chatbot"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid> <!-- start of parent grid-->
+    <Grid
+        
+        
+        
+        Background="#FF000000"
+        
+        >
+        <!-- start of parent grid-->
 
         <!-- start of chat logo -->
         <Grid
             x:Name="logo_grid"
             Visibility="Visible"
             >
-            
+
             <!-- start of logo grid-->
+
+            <!-- show logo-->
             <Image 
                 Source="/logo.jpg"
                 Height="250"
-                Width= "350"
+                Width="350"
                 Margin="0,0,0,165"
                 />
+
+            <!-- button to start ai-->
+            <Button
+                Height="50"
+                Width="200"
+                Margin="0,200,0,0"
+                Content ="Start Chatbot"
+                Click ="start_Chatbot"
+                Background="Green"
+                BorderBrush="Black"
+                BorderThickness="5"
+                />
+
+
+
+
+        </Grid>
+        <!-- end of chat logo -->
+
+        <!-- username grid to prompt user -->
+        <Grid 
+            x:Name="username_grid" 
+            Visibility="Hidden"
+            >
+
+            <!-- start of username grid -->
             
+            <!-- show logo at top of screen-->
+            <Image
+                Source="/logo.jpg"
+                Height="100"
+                Width="150"
+                Margin="0,0,650,320"
+                />
 
+            <!-- textbox for username -->
+            <TextBox
+                x:Name="user_name"
+                Height="50"
+                Width="400"
+                />
+            
+            <!-- button to submit username -->
+            <Button 
+                x:Name="submit_username"
+                Height="50"
+                Width="200"
+                Margin="0,120,0,0"
+                Content="Submit user name"
+                Click="submit_names"
+                Background="#FF2196F3" 
+                Foreground="White"
+                BorderThickness="1"
+                BorderBrush="White"
+                
+                />
 
-
-
-        </Grid> <!-- end of chat logo -->
+        <!-- end of username grid-->
+        </Grid>
         
-        
+        <!-- chats grid -->
+        <Grid 
+            x:Name="chats_grid"
+            Visibility="Hidden"
+            >
+            
+            <!-- start of chats grid -->
+
+            <!-- show logo at top of screen-->
+            <Image
+                Source="/logo.jpg"
+                Height="100"
+                Width="150"
+                Margin="0,0,650,320"
+                />  
+
+            <!-- list to view added chat -->
+            <ListView 
+                x:Name="chats_list"
+                Height="200"
+                Width="500"
+                Margin="0,0,0,160"
+                />
+            
+            <!-- Textbox to enter questions-->
+            <TextBox 
+                x:Name="questions_textbox"
+                Height="50"
+                Width="400"
+                Margin="0,300,100,0"
+                />
+
+            <Button 
+                Height="50"
+                Width="150"
+                Margin="600,300,250,0"
+                Content=" Send"
+                Click="send_question"
+                />
+
+        </Grid>
+
+
+
+        <!-- end of username grid-->
+
+
     </Grid> <!-- end of parent grid-->
 </Window>
