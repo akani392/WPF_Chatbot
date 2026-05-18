@@ -79,6 +79,19 @@ namespace WPF_Chatbot
                 }
             },
 
+            {
+                "scam",
+                new string[]
+                {
+                    "In cybersecurity, a scam is primarily defined as a form of social engineering. It is an attack vector that relies heavily on human interaction and psychological manipulation (exploiting trust, fear, urgency, or greed) to trick people into breaking normal security procedures, rather than relying on technical hacking methods like cracking passwords or exploiting software bugs.",
+                    "A scam is a malicious campaign delivered via digital communication channels—such as email (phishing), SMS (smishing), voice calls (vishing), or social media—where attackers impersonate legitimate entities (banks, government agencies, or colleagues). The goal is to deceive the recipient into clicking malicious links, downloading malware, or surrendering sensitive credentials.",
+                    "From an identity security perspective, a scam is a deceptive trap designed for credential harvesting. It uses spoofed websites or fake login portals that mirror authentic brands to trick users into typing in their usernames, passwords, and two-factor authentication codes, allowing attackers to hijack digital identities and access restricted networks.",
+                    "Within cybercrime operations, a scam is a cyber-enabled financial fraud scheme. This includes sophisticated attacks like Business Email Compromise (BEC) or authorized push payment (APP) fraud, where threat actors intercept or spoof corporate communications to deceive employees into routing legitimate financial transfers into attacker-controlled bank accounts.",
+                    "From a technical threat delivery perspective, a scam is a delivery mechanism for malicious payloads. It wraps harmful software (such as ransomware, spyware, or trojans) in a deceptive narrative—such as a fake shipping invoice, an urgent software update, or a promised prize—convincing the user to bypass their system's security warnings and execute the malicious file themselves."
+                }
+            },
+
+
 
 
             //end of dictinary for chatbot responses
@@ -111,7 +124,7 @@ namespace WPF_Chatbot
             // start of submit name method
 
             //get the username from the text box
-            string username = user_name.Text.ToString();
+            username = user_name.Text.ToString();
 
             //check is username is empty
             if(username != "")
@@ -119,7 +132,7 @@ namespace WPF_Chatbot
                 //start of if
 
                 //show message
-                MessageBox.Show(" wellcome " + user_name);
+                MessageBox.Show("Wellcome " + user_name);
 
                 //set the username grid hidden and chats visable
                 username_grid.Visibility = Visibility.Hidden;
@@ -139,10 +152,48 @@ namespace WPF_Chatbot
         }
         private void send_question(object sender, RoutedEventArgs e)
         {
+           // start of send question methos
+           string message = questions_textbox.Text.Trim().ToLower();
+
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return;
+            }
+
+            chats_list.Items.Add($"{username}: {message}");
+
+            string botReply = GetChatbotResponse(message);
+            chats_list.Items.Add($"ChatBot: {botReply}");
+
+            questions_textbox.Clear();
+
+            //being abble to scrool
+            chats_list.ScrollIntoView(chats_list.Items[chats_list.Items.Count - 1]);
+
+
+
+            //end of send question method
 
         }
 
-       
+        public string GetChatbotResponse(string message)
+        {
+            // start of get chatbot response method
+            foreach (var key in chatbotRespones.Keys)
+            {
+                if (message.Contains(key))
+                {
+                    string[] responses = chatbotRespones[key];
+                    int index = random.Next(responses.Length);
+                    return responses[index];
+                }
+            }
+            return "Sorry, I don't understand that. Can you ask about phishing, malware, password, firewall, or scam?";
+
+            //end of get chatbot response method
+        }
+
+
 
 
 
