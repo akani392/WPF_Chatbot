@@ -18,7 +18,7 @@
         <!-- start of chat logo -->
         <Grid
             x:Name="logo_grid"
-            Visibility="Visible"
+            Visibility="Hidden"
             >
 
             <!-- start of logo grid-->
@@ -93,7 +93,7 @@
         <!-- chats grid -->
         <Grid 
             x:Name="chats_grid"
-            Visibility="Hidden"
+            Visibility="Visible"
             >
             
             <!-- start of chats grid -->
@@ -123,11 +123,17 @@
                 />
 
             <Button 
-                Height="50"
-                Width="150"
-                Margin="600,300,250,0"
-                Content=" Send"
+                Height="40"
+                Width="140"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Margin="500,0,0,20"
+                Content="Send"
                 Click="send_question"
+                Background="#FF2196F3" 
+                Foreground="White"
+                BorderThickness="1"
+                BorderBrush="White"
                 />
 
         </Grid>

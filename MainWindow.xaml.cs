@@ -12,10 +12,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-  
+
 namespace WPF_Chatbot
 {
- // Start of namspace
+    // Start of namspace
     public partial class MainWindow : Window
     {
         //start of class
@@ -106,7 +106,7 @@ namespace WPF_Chatbot
             //end of constructor
         }
 
-        private void start_Chatbot (object sender, RoutedEventArgs e)
+        private void start_Chatbot(object sender, RoutedEventArgs e)
         {
             // start of start chatboot method
 
@@ -127,7 +127,7 @@ namespace WPF_Chatbot
             username = user_name.Text.ToString();
 
             //check is username is empty
-            if(username != "")
+            if (username != "")
             {
                 //start of if
 
@@ -152,8 +152,8 @@ namespace WPF_Chatbot
         }
         private void send_question(object sender, RoutedEventArgs e)
         {
-           // start of send question methos
-           string message = questions_textbox.Text.Trim().ToLower();
+            // start of send question methos
+            string message = questions_textbox.Text.Trim().ToLower();
 
             if (string.IsNullOrWhiteSpace(message))
             {
@@ -176,29 +176,100 @@ namespace WPF_Chatbot
 
         }
 
+
+        Dictionary<string, int> topicAskCount = new Dictionary<string, int>();
         public string GetChatbotResponse(string message)
         {
-            // start of get chatbot response method
+            //start of chatbot response method
+
+
             foreach (var key in chatbotRespones.Keys)
             {
                 if (message.Contains(key))
                 {
+                    // Count how many times this topic has been asked
+                    if (!topicAskCount.ContainsKey(key))
+                        topicAskCount[key] = 0;
+
+                    topicAskCount[key]++;
+
+                    // After 2 asks on the same topic, offer a follow-up menu
+                    if (topicAskCount[key] == 2)
+                    {
+                        return $"You've asked about {key} a few times! Would you like to know more? Type:\n" +
+                               $"  '{key} types'      - Types of {key}\n" +
+                               $"  '{key} detect'     - How to detect {key}\n" +
+                               $"  '{key} prevent'    - How to prevent {key}";
+                    }
+
                     string[] responses = chatbotRespones[key];
                     int index = random.Next(responses.Length);
                     return responses[index];
                 }
             }
-            return "Sorry, I don't understand that. Can you ask about phishing, malware, password, firewall, or scam?";
 
-            //end of get chatbot response method
+            // Check for follow-up sub-topic questions 
+            return GetSubTopicResponse(message);
         }
 
+        public string GetSubTopicResponse(string message)
+        {
+            // start of sub topic response method
+            Dictionary<string, string> subTopicResponses = new Dictionary<string, string>()
+            {
+                {
+                    "malware types",
+                    "Ransomware: Ransomware is like a digital kidnapper. Once it infects a device, it secretly encrypts " +
+                    "the user's files—locking photos, documents, and system files behind unbreakable code.\n\n" +
+                    "The attacker then leaves a digital ransom note demanding payment (usually in cryptocurrency like " +
+                    "Bitcoin) in exchange for the decryption key. If the victim doesn't pay, the attackers may delete " +
+                    "the files permanently or leak sensitive data online.\n\n" +
 
+                    "Spyware: Spyware is a hidden observer designed to stay completely invisible for as long as possible.\n\n" +
+                    "It runs quietly in the background tracking everything a user does. A common type is a keylogger, " +
+                    "which records every keystroke. This allows attackers to steal bank logins, passwords, and credit " +
+                    "card numbers without the user ever realizing their security has been compromised.\n\n" +
+                    "The Main Difference: Ransomware relies on disruption to force a quick payout, while spyware " +
+            "relies on stealth to gather data over time."
+                },
+                {
+                     "malware detect",
+                     "How to Detect Malware:\n\n" +
+                     "- Slow device performance: Malware secretly consumes CPU and memory in the background.\n" +
+                    "- Unexpected pop-ups or browser redirects: A sign of adware or spyware.\n" +
+                     "- Antivirus suddenly disabled: Malware often disables security tools to avoid detection.\n" +
+                     "- Unusual network activity: Malware may be sending your data to a remote attacker.\n" +
+                     "- Files missing or encrypted: A strong sign of ransomware infection."
+                },
+                {
+                    "malware prevent",
+                    "How to Prevent Malware:\n\n" +
+                     "- Keep software updated: Updates patch known vulnerabilities malware exploits.\n" +
+                    "- Use reputable antivirus software: It can detect and block known threats.\n" +
+                    "- Avoid suspicious links and attachments: Most malware arrives via phishing emails.\n" +
+                    "- Download only from trusted sources: Fake software installers are a common delivery method.\n" +
+                    "- Back up your data regularly: If ransomware strikes, backups let you recover without paying."
+                },
+            };
 
+            // check if any sub topic key is found in the message
+            foreach (var entry in subTopicResponses)
+            {
+                if (message.Contains(entry.Key))
+                {
+                    return entry.Value;
+                }
+            }
 
+            return "Sorry, I don't understand that. Try asking about: malware types, malware detect, or malware prevent.";
 
-        //end of class
+            // end of sub topic response method
+      
+        }
     }
 
-    // End of namespace
+    // End of namespantce
 }
+
+
+  
