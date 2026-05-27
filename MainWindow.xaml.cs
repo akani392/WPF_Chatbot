@@ -1,6 +1,13 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Controls;
+using System.Windows.Documents;
 
 namespace WPF_Chatbot
 {
@@ -9,28 +16,33 @@ namespace WPF_Chatbot
     {
         // Start of class
 
-        // ── Class-level variables 
+        // Class-level variables
         string username = "";
         Random random = new Random();
-        string memoryFile = "memory.txt";   
-        string currentTopic = "";             
+        string memoryFile = "memory.txt";  
+        string currentTopic = "";
 
-        // ── Keyword lookup – maps topic names to trigger words 
-        // Used by DetectTopic() to figure out what the user is asking about
+        // Colour for chat messages
+        readonly Brush botColor = new SolidColorBrush(Color.FromRgb(33, 150, 243));  // blue  – ChatBot
+        readonly Brush userColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));  // red   – user
+
+        
+        Dictionary<string, string> activeMenu = null;
+
+        // Keyword lookup – maps topic names to trigger words
         Dictionary<string, string[]> topicKeyWords = new Dictionary<string, string[]>()
         {
-            { "phishing", new string[] { "phishing", "email", "scam", "fraud"        } },
-            { "malware",  new string[] { "malware",  "virus", "trojan", "ransomware" } },
-            { "password", new string[] { "password", "credentials", "passphrase"     } },
-            { "firewall", new string[] { "firewall", "network barrier", "acl"        } },
-            { "scam",     new string[] { "scam", "fraud", "social engineering"       } }
+            { "phishing", new string[] { "phishing", "email", "lure"               } },
+            { "malware",  new string[] { "malware",  "virus", "trojan","ransomware" } },
+            { "password", new string[] { "password", "credentials", "passphrase"   } },
+            { "firewall", new string[] { "firewall", "network barrier", "acl"      } },
+            { "scam",     new string[] { "scam", "fraud", "social engineering"     } }
         };
 
-        // ── Main response dictionary 
+        // Main response dictionary
         // Each topic has an array of researched responses; one is picked at random
         Dictionary<string, string[]> chatbotResponses = new Dictionary<string, string[]>()
         {
-            // ── Phishing 
             {
                 "phishing",
                 new string[]
@@ -42,8 +54,6 @@ namespace WPF_Chatbot
                     "If an email creates a sense of extreme urgency or fear, it is likely a phishing attempt."
                 }
             },
-
-            // ── Malware 
             {
                 "malware",
                 new string[]
@@ -55,8 +65,6 @@ namespace WPF_Chatbot
                     "Using reputable antivirus software can help detect and remove malware from your system."
                 }
             },
-
-            // ── Password 
             {
                 "password",
                 new string[]
@@ -68,8 +76,6 @@ namespace WPF_Chatbot
                     "Historically, a password (or watchword) was a pre-arranged secret phrase spoken to a guard to prove loyalty, allowing safe passage through a secure checkpoint."
                 }
             },
-
-            // Firewa;;
             {
                 "firewall",
                 new string[]
@@ -81,8 +87,6 @@ namespace WPF_Chatbot
                     "The original 'firewall' was a physical, fireproof wall built in a building or vehicle to stop the spread of fire. The tech industry borrowed the term to describe barriers that contain cyber threats."
                 }
             },
-
-            // ── Scam 
             {
                 "scam",
                 new string[]
@@ -96,45 +100,51 @@ namespace WPF_Chatbot
             }
         };
 
-        // ── Sub-topic deep-dive responses 
-        // Triggered when the user types e.g. "malware types" / "malware detect" / "malware prevent"
+        // Sub-topic deep-dive responses
         Dictionary<string, string> subTopicResponses = new Dictionary<string, string>()
         {
-            {
-                "malware types",
-                "Types of Malware:\n\n" +
-                "Ransomware: Like a digital kidnapper, ransomware encrypts the victim's files and demands payment " +
-                "(usually in cryptocurrency) for the decryption key. If the victim does not pay, files may be " +
-                "deleted permanently or leaked online.\n\n" +
-                "Spyware: A hidden observer that runs quietly in the background. A common variant is a keylogger, " +
-                "which records every keystroke to steal bank logins, passwords, and credit card numbers without " +
-                "the user realizing.\n\n" +
-                "Key difference: Ransomware disrupts to force a quick payout; spyware uses stealth to gather data over time."
-            },
-            {
-                "malware detect",
-                "How to Detect Malware:\n\n" +
-                "- Slow device performance: Malware secretly consumes CPU and memory in the background.\n" +
-                "- Unexpected pop-ups or browser redirects: A sign of adware or spyware.\n" +
-                "- Antivirus suddenly disabled: Malware often disables security tools to avoid detection.\n" +
-                "- Unusual network activity: Malware may be sending your data to a remote attacker.\n" +
-                "- Files missing or encrypted: A strong sign of ransomware infection."
-            },
-            {
-                "malware prevent",
-                "How to Prevent Malware:\n\n" +
-                "- Keep software updated: Updates patch known vulnerabilities that malware exploits.\n" +
-                "- Use reputable antivirus software: It can detect and block known threats.\n" +
-                "- Avoid suspicious links and attachments: Most malware arrives via phishing emails.\n" +
-                "- Download only from trusted sources: Fake software installers are a common delivery method.\n" +
-                "- Back up your data regularly: If ransomware strikes, backups let you recover without paying."
-            }
+            // Malware sub-topics
+            { "malware types",
+              "Types of Malware:\n\nRansomware: Like a digital kidnapper, ransomware encrypts the victim's files and demands payment (usually in cryptocurrency) for the decryption key.\n\nSpyware: A hidden observer that runs quietly in the background, recording keystrokes to steal bank logins and passwords.\n\nKey difference: Ransomware disrupts to force a quick payout; spyware uses stealth to gather data over time." },
+            { "malware detect",
+              "How to Detect Malware:\n\n- Slow device performance: Malware secretly consumes CPU and memory.\n- Unexpected pop-ups or browser redirects: A sign of adware or spyware.\n- Antivirus suddenly disabled: Malware often disables security tools.\n- Unusual network activity: Malware may be sending your data to a remote attacker.\n- Files missing or encrypted: A strong sign of ransomware." },
+            { "malware prevent",
+              "How to Prevent Malware:\n\n- Keep software updated: Updates patch known vulnerabilities.\n- Use reputable antivirus software.\n- Avoid suspicious links and attachments.\n- Download only from trusted sources.\n- Back up your data regularly." },
+            // Phishing sub-topics
+            { "phishing types",
+              "Types of Phishing:\n\nSpear Phishing: Targeted at a specific individual using personalised details.\n\nSmishing: Phishing via SMS text messages.\n\nVishing: Voice phishing over phone calls impersonating banks or government.\n\nWhaling: Targeted at senior executives or high-value targets." },
+            { "phishing detect",
+              "How to Detect Phishing:\n\n- Check sender email addresses for subtle misspellings.\n- Be suspicious of urgent language demanding immediate action.\n- Hover over links to preview the destination URL.\n- Look for generic greetings like 'Dear Customer'.\n- Watch for poor grammar or unusual formatting." },
+            { "phishing prevent",
+              "How to Prevent Phishing:\n\n- Never click links in unsolicited emails.\n- Enable multi-factor authentication (MFA) on all accounts.\n- Use an email spam filter.\n- Report suspicious emails to your IT department.\n- Train yourself regularly to recognise phishing red flags." },
+            // Password sub-topics
+            { "password types",
+              "Types of Passwords and Authentication:\n\nPassphrase: A sequence of random words that is long and memorable.\n\nOne-Time Password (OTP): A temporary code valid for a single login.\n\nBiometric: Uses a physical trait (fingerprint, face ID).\n\nHardware Key: A physical device like a YubiKey." },
+            { "password detect",
+              "How to Detect a Compromised Password:\n\n- Unexpected login notifications or account activity.\n- Security alerts about credentials appearing in a data breach.\n- Use 'Have I Been Pwned' (haveibeenpwned.com) to check your email.\n- Sudden logouts or 'someone else is using your account' messages." },
+            { "password prevent",
+              "How to Keep Passwords Secure:\n\n- Use a unique, strong password for every account (12+ characters).\n- Use a password manager.\n- Enable multi-factor authentication.\n- Never share passwords via email or chat.\n- Change passwords immediately if you suspect a breach." },
+            // Firewall sub-topics
+            { "firewall types",
+              "Types of Firewalls:\n\nPacket-Filtering: Inspects individual packets against rules.\n\nStateful: Tracks active connections and session state.\n\nApplication Layer (Proxy): Deep content filtering at the application level.\n\nNext-Generation (NGFW): Combines IPS, SSL inspection, and application awareness." },
+            { "firewall detect",
+              "How to Know If Your Firewall Is Working:\n\n- Check firewall logs for blocked or suspicious attempts.\n- Use an online port scanner to confirm unwanted ports are closed.\n- Monitor alerts from your firewall's management console.\n- Run periodic penetration tests to verify rules are enforced." },
+            { "firewall prevent",
+              "Firewall Best Practices:\n\n- Keep firmware and rule sets up to date.\n- Block everything by default — allow only what is needed.\n- Segment your network so a breach cannot spread freely.\n- Audit firewall rules regularly to remove outdated entries.\n- Combine with an IDS/IPS for layered defence." },
+            // Scam sub-topics
+            { "scam types",
+              "Types of Scams:\n\nAdvance-Fee Scam: Promises a large reward for a small upfront payment.\n\nTech Support Scam: Fake alerts trick you into paying for unnecessary 'fixes'.\n\nRomance Scam: Attackers build a fake relationship before requesting money.\n\nBusiness Email Compromise (BEC): Impersonates executives to redirect payments." },
+            { "scam detect",
+              "How to Detect a Scam:\n\n- Unsolicited contact asking for money or personal info is a red flag.\n- Verify unexpected requests through official channels.\n- Be sceptical of deals that seem too good to be true.\n- Watch for pressure tactics: 'Act now or lose your account!'\n- Legitimate organisations never ask for gift cards or wire transfers." },
+            { "scam prevent",
+              "How to Avoid Scams:\n\n- Never send money to someone you have not verified.\n- Enable spam filters on email and block suspicious numbers.\n- Educate yourself and others about common scam tactics.\n- Report scams to your national consumer protection authority.\n- Slow down — scammers rely on urgency to bypass your judgement." }
         };
 
-        
+        // Topic ask counter
         // Tracks how many times each topic has been asked so we can offer deep-dives
         Dictionary<string, int> topicAskCount = new Dictionary<string, int>();
 
+      
         public MainWindow()
         {
             // Start of constructor
@@ -142,12 +152,18 @@ namespace WPF_Chatbot
             // End of constructor
         }
 
-
         // Start chatbot – hide logo grid, show username entry grid
         private void start_Chatbot(object sender, RoutedEventArgs e)
         {
             logo_grid.Visibility = Visibility.Hidden;
             username_grid.Visibility = Visibility.Visible;
+        }
+
+        // Allow pressing Enter in the name box to submit
+        private void user_name_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+                submit_names(sender, e);
         }
 
         // Submit username – validate input then move to the chat screen
@@ -158,23 +174,30 @@ namespace WPF_Chatbot
 
             if (string.IsNullOrWhiteSpace(username))
             {
-                MessageBox.Show("Please enter a username.");
+                ShowError("Please enter a username.");
                 return;
             }
 
             if (!Regex.IsMatch(username, @"^[a-zA-Z]+$"))
             {
-                MessageBox.Show("Please enter a valid name (letters only).");
+                ShowError("Please enter a valid name (letters only).");
                 return;
             }
 
-            // Hide username grid and show chat grid
+            // Clear any previous validation error
+            error_text.Visibility = Visibility.Collapsed;
             username_grid.Visibility = Visibility.Hidden;
             chats_grid.Visibility = Visibility.Visible;
 
-            // Display welcome message in the chat list
-            chats_list.Items.Add($"ChatBot: Welcome, {username}! Ask me about phishing, malware, passwords, firewalls, or scams.");
+            AddBotMessage("Welcome, " + username + "! Ask me about phishing, malware, passwords, firewalls, or scams.");
             // End of submit names method
+        }
+
+        // Allow pressing Enter in the chat box to send
+        private void questions_textbox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+                send_question(sender, e);
         }
 
         // Send button – read input, display it, then get and display a bot reply
@@ -186,10 +209,30 @@ namespace WPF_Chatbot
             if (string.IsNullOrWhiteSpace(message))
                 return;
 
-            // Show what the user typed
-            chats_list.Items.Add($"{username}: {message}");
+            // Show what the user typed in red
+            AddUserMessage(message);
 
-            // ── Memory: save favourite topic  
+            // ── Numbered menu: if a menu is active check if the user typed 1, 2, or 3
+            if (activeMenu != null)
+            {
+                string subKey;
+                if (activeMenu.TryGetValue(message, out subKey))
+                {
+                    // Valid choice – show the deep-dive and close the menu
+                    activeMenu = null;
+                    AddBotMessage(subTopicResponses[subKey]);
+                    questions_textbox.Clear();
+                    return;
+                }
+                else
+                {
+                    // Not 1/2/3 – close the menu and fall through to normal handling
+                    activeMenu = null;
+                    AddBotMessage("That wasn't a valid option. Continuing with your question...");
+                }
+            }
+
+            // ── Memory: save favourite topic ─────────────────────────────────
             if (message.Contains("interested in"))
             {
                 SaveToFile(message);
@@ -197,30 +240,28 @@ namespace WPF_Chatbot
                 return;
             }
 
-            // ── Memory: recall favourite topic 
+            // ── Memory: recall favourite topic ───────────────────────────────
             if (message.Contains("favorite topic") || message.Contains("favourite topic"))
             {
                 if (File.Exists(memoryFile))
                 {
                     string savedTopic = File.ReadAllText(memoryFile);
-                    chats_list.Items.Add($"ChatBot: Your favourite topic is: {savedTopic}");
+                    AddBotMessage("Your favourite topic is: " + savedTopic);
                 }
                 else
                 {
-                    chats_list.Items.Add("ChatBot: I don't know your favourite topic yet.");
+                    AddBotMessage("I don't know your favourite topic yet.");
                 }
 
                 questions_textbox.Clear();
-                ScrollToBottom();
                 return;
             }
 
-            // Get bot reply and add it to the chat list
+            // Get bot reply and display it
             string botReply = GetChatbotResponse(message);
-            chats_list.Items.Add($"ChatBot: {botReply}");
+            AddBotMessage(botReply);
 
             questions_textbox.Clear();
-            ScrollToBottom();
             // End of send question method
         }
 
@@ -244,20 +285,20 @@ namespace WPF_Chatbot
                 return BuildResponse(topic, sentiment, moreInfo);
             }
 
-            // Check for deep-dive sub-topic questions (e.g. "malware types")
+            // Check for sub-topic keywords typed directly (still supported as fallback)
             string subReply = GetSubTopicResponse(message);
             if (!subReply.StartsWith("Sorry"))
                 return subReply;
 
             // Sentiment-only reply when no topic is detected
             if (!string.IsNullOrEmpty(sentiment))
-                return $"{GetSentimentSupport(sentiment)} Feel free to ask me about phishing, malware, passwords, firewalls, or scams.";
+                return GetSentimentSupport(sentiment) + " Feel free to ask me about phishing, malware, passwords, firewalls, or scams.";
 
             return "I am built to answer cybersecurity questions. Try asking about: phishing, malware, passwords, firewalls, or scams.";
             // End of chatbot response method
         }
 
-        // Builds a response combining a random topic fact, a sentiment opener, and repeat-ask deep-dive hints
+        // Builds a response and shows a numbered menu after 3 asks on the same topic
         public string BuildResponse(string topic, string sentiment, bool moreInfo)
         {
             // Start of build response method
@@ -268,13 +309,19 @@ namespace WPF_Chatbot
 
             topicAskCount[topic]++;
 
-            // After asking about the same topic twice, offer deep-dive options
-            if (topicAskCount[topic] == 2)
+            // After 3 questions on the same topic show a numbered deep-dive menu
+            if (topicAskCount[topic] == 3)
             {
-                return $"You've asked about {topic} a few times! Would you like to go deeper? Type:\n" +
-                       $"  '{topic} types'    - Types of {topic}\n" +
-                       $"  '{topic} detect'   - How to detect {topic}\n" +
-                       $"  '{topic} prevent'  - How to prevent {topic}";
+                // Store the menu so the next reply of "1", "2", or "3" is handled in send_question
+                activeMenu = new Dictionary<string, string>();
+                activeMenu["1"] = topic + " types";
+                activeMenu["2"] = topic + " detect";
+                activeMenu["3"] = topic + " prevent";
+
+                return "You have asked a lot about " + topic + "! Would you like to go deeper?\n\n" +
+                       "  Reply 1  -  Types of " + topic + "\n" +
+                       "  Reply 2  -  How to detect " + topic + "\n" +
+                       "  Reply 3  -  How to prevent " + topic;
             }
 
             // Pick a random response for this topic
@@ -284,12 +331,12 @@ namespace WPF_Chatbot
 
             // Prepend an empathetic opener if a sentiment was detected
             string support = GetSentimentSupport(sentiment);
-            return string.IsNullOrEmpty(support) ? response : $"{support}\n\n{response}";
+            return string.IsNullOrEmpty(support) ? response : support + "\n\n" + response;
 
             // End of build response method
         }
 
-        // Returns a deep-dive answer for sub-topic queries like "malware types"
+        // Returns a deep-dive answer for sub-topic keys (also a fallback if typed directly)
         public string GetSubTopicResponse(string message)
         {
             // Start of sub-topic response method
@@ -302,7 +349,6 @@ namespace WPF_Chatbot
             return "Sorry, I don't understand that. Try asking about: phishing, malware, passwords, firewalls, or scams.";
             // End of sub-topic response method
         }
-
 
         // Scans the message for known topic keywords and returns the matching topic name
         public string DetectTopic(string message)
@@ -349,12 +395,15 @@ namespace WPF_Chatbot
         public string GetSentimentSupport(string sentiment)
         {
             // Start of get sentiment support method
-            return sentiment switch
+            switch (sentiment)
             {
-                "negative" => "I understand this topic can feel overwhelming — you are not alone.",
-                "positive" => "Great to hear you are feeling confident about this!",
-                _ => ""
-            };
+                case "negative":
+                    return "I understand this topic can feel overwhelming — you are not alone.";
+                case "positive":
+                    return "Great to hear you are feeling confident about this!";
+                default:
+                    return "";
+            }
             // End of get sentiment support method
         }
 
@@ -367,22 +416,61 @@ namespace WPF_Chatbot
 
             if (string.IsNullOrWhiteSpace(topic))
             {
-                chats_list.Items.Add("ChatBot: Please tell me what you are interested in after \"I am interested in\".");
+                AddBotMessage("Please tell me what you are interested in after \"I am interested in\".");
                 return;
             }
 
             File.WriteAllText(memoryFile, topic);
-            chats_list.Items.Add($"ChatBot: Got it! I will remember that your favourite topic is \"{topic}\".");
+            AddBotMessage("Got it! I will remember that your favourite topic is \"" + topic + "\".");
             // End of save to file method
         }
 
-      
-
-        // Scrolls the chat list down to the most recently added message
-        private void ScrollToBottom()
+        // Adds a bot message with a blue sender label to the RichTextBox
+        private void AddBotMessage(string text)
         {
-            if (chats_list.Items.Count > 0)
-                chats_list.ScrollIntoView(chats_list.Items[chats_list.Items.Count - 1]);
+            Paragraph para = new Paragraph();
+            para.Margin = new Thickness(0, 2, 0, 2);
+
+            // Blue bold "ChatBot: " label
+            Run label = new Run("ChatBot: ");
+            label.Foreground = botColor;
+            label.FontWeight = FontWeights.Bold;
+            para.Inlines.Add(label);
+
+            // White message body
+            Run body = new Run(text);
+            body.Foreground = Brushes.White;
+            para.Inlines.Add(body);
+
+            chat_rtb.Document.Blocks.Add(para);
+            chat_rtb.ScrollToEnd();
+        }
+
+        // Adds a user message with a red sender label to the RichTextBox
+        private void AddUserMessage(string text)
+        {
+            Paragraph para = new Paragraph();
+            para.Margin = new Thickness(0, 2, 0, 2);
+
+            // Red bold "Username: " label
+            Run label = new Run(username + ": ");
+            label.Foreground = userColor;
+            label.FontWeight = FontWeights.Bold;
+            para.Inlines.Add(label);
+
+            // White message body
+            Run body = new Run(text);
+            body.Foreground = Brushes.White;
+            para.Inlines.Add(body);
+
+            chat_rtb.Document.Blocks.Add(para);
+        }
+
+        // Shows an inline validation error under the username text box
+        private void ShowError(string message)
+        {
+            error_text.Text = message;
+            error_text.Visibility = Visibility.Visible;
         }
 
         // End of class

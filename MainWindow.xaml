@@ -18,7 +18,7 @@
         <!-- start of chat logo -->
         <Grid
             x:Name="logo_grid"
-            Visibility="Hidden"
+            Visibility="Visible"
             >
 
             <!-- start of logo grid-->
@@ -38,7 +38,7 @@
                 Margin="0,200,0,0"
                 Content ="Start Chatbot"
                 Click ="start_Chatbot"
-                Background="Green"
+                Background="#FF2196F3"
                 BorderBrush="Black"
                 BorderThickness="5"
                 />
@@ -56,7 +56,7 @@
             >
 
             <!-- start of username grid -->
-            
+
             <!-- show logo at top of screen-->
             <Image
                 Source="/logo.jpg"
@@ -70,8 +70,18 @@
                 x:Name="user_name"
                 Height="50"
                 Width="400"
+                KeyDown="user_name_KeyDown"
                 />
-            
+
+            <!-- textblock to show errors (needed for backend code) -->
+            <TextBlock 
+                x:Name="error_text" 
+                Foreground="Red" 
+                HorizontalAlignment="Center" 
+                Margin="0,70,0,0" 
+                Visibility="Collapsed"
+                />
+
             <!-- button to submit username -->
             <Button 
                 x:Name="submit_username"
@@ -87,15 +97,15 @@
                 
                 />
 
-        <!-- end of username grid-->
+            <!-- end of username grid-->
         </Grid>
-        
+
         <!-- chats grid -->
         <Grid 
             x:Name="chats_grid"
-            Visibility="Visible"
+            Visibility="Hidden"
             >
-            
+
             <!-- start of chats grid -->
 
             <!-- show logo at top of screen-->
@@ -104,22 +114,29 @@
                 Height="100"
                 Width="150"
                 Margin="0,0,650,320"
-                />  
+                />
 
             <!-- list to view added chat -->
-            <ListView 
-                x:Name="chats_list"
+            <RichTextBox 
+                x:Name="chat_rtb"
                 Height="200"
                 Width="500"
                 Margin="0,0,0,160"
-                />
-            
+                Background="#FF1E1E1E" 
+                Foreground="White"
+                BorderBrush="#FF2196F3"
+                BorderThickness="1"
+                VerticalScrollBarVisibility="Auto"
+                IsReadOnly="True"
+                />  
+
             <!-- Textbox to enter questions-->
             <TextBox 
                 x:Name="questions_textbox"
                 Height="50"
                 Width="400"
                 Margin="0,300,100,0"
+                KeyDown="questions_textbox_KeyDown"
                 />
 
             <Button 
@@ -137,11 +154,9 @@
                 />
 
         </Grid>
-
-
-
         <!-- end of username grid-->
 
 
-    </Grid> <!-- end of parent grid-->
+    </Grid>
+    <!-- end of parent grid-->
 </Window>
