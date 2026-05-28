@@ -98,7 +98,9 @@
     <Resource Include="logo.jpg" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="recording\Recording2.wav" />
+    <Content Include="recording\Recording2.wav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

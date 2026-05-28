@@ -119,15 +119,15 @@
             <!-- list to view added chat -->
             <RichTextBox 
                 x:Name="chat_rtb"
-                Height="200"
+                Height="250"
                 Width="500"
                 Margin="0,0,0,160"
                 Background="#FF1E1E1E" 
-                Foreground="White"
+                Foreground="#FF2196F3"
                 BorderBrush="#FF2196F3"
-                BorderThickness="1"
+                BorderThickness="5"
                 VerticalScrollBarVisibility="Auto"
-                IsReadOnly="True"
+            
                 />  
 
             <!-- Textbox to enter questions-->
@@ -140,16 +140,14 @@
                 />
 
             <Button 
-                Height="40"
+                Height="50"
                 Width="140"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Bottom"
-                Margin="500,0,0,20"
+                Margin="500,340,0,45"
                 Content="Send"
                 Click="send_question"
                 Background="#FF2196F3" 
                 Foreground="White"
-                BorderThickness="1"
+                BorderThickness="5"
                 BorderBrush="White"
                 />
 

@@ -8,13 +8,36 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Media;
 
 namespace WPF_Chatbot
 {
     // Start of namespace
     public partial class MainWindow : Window
     {
+
         // Start of class
+        
+
+        //voice recording
+        public void PlayVoiceGreeting()
+        {
+            //start voice recording
+
+            try
+            {
+                SoundPlayer player = new SoundPlayer(@"recording/Recording2.wav");
+                player.Load();
+                player.Play();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error playing sound: " + ex.Message);
+            }
+
+            //end of voice recording
+        }
+
 
         // Class-level variables
         string username = "";
@@ -32,11 +55,24 @@ namespace WPF_Chatbot
         // Keyword lookup – maps topic names to trigger words
         Dictionary<string, string[]> topicKeyWords = new Dictionary<string, string[]>()
         {
-            { "phishing", new string[] { "phishing", "email", "lure"               } },
-            { "malware",  new string[] { "malware",  "virus", "trojan","ransomware" } },
-            { "password", new string[] { "password", "credentials", "passphrase"   } },
-            { "firewall", new string[] { "firewall", "network barrier", "acl"      } },
-            { "scam",     new string[] { "scam", "fraud", "social engineering"     } }
+            { 
+                "phishing",
+                new string[] 
+                { "phishing", "email", "lure"}
+            },
+            { "malware", 
+               new string[] 
+               { "malware",  "virus", "trojan","ransomware" } 
+            },
+            { "password", 
+               new string[] 
+               { "password", "credentials", "passphrase"   } },
+            { "firewall", 
+               new string[] 
+               { "firewall", "network barrier", "acl"      } },
+            { "scam",     
+               new string[] 
+               { "scam", "fraud", "social engineering"     } }
         };
 
         // Main response dictionary
@@ -105,39 +141,96 @@ namespace WPF_Chatbot
         {
             // Malware sub-topics
             { "malware types",
-              "Types of Malware:\n\nRansomware: Like a digital kidnapper, ransomware encrypts the victim's files and demands payment (usually in cryptocurrency) for the decryption key.\n\nSpyware: A hidden observer that runs quietly in the background, recording keystrokes to steal bank logins and passwords.\n\nKey difference: Ransomware disrupts to force a quick payout; spyware uses stealth to gather data over time." },
+              "Types of Malware:" +
+                "\n\nRansomware: Like a digital kidnapper, ransomware encrypts the victim's files and demands payment (usually in cryptocurrency) for the decryption key." +
+                "\n\nSpyware: A hidden observer that runs quietly in the background, recording keystrokes to steal bank logins and passwords." +
+                "\n\nKey difference: Ransomware disrupts to force a quick payout; spyware uses stealth to gather data over time." },
             { "malware detect",
               "How to Detect Malware:\n\n- Slow device performance: Malware secretly consumes CPU and memory.\n- Unexpected pop-ups or browser redirects: A sign of adware or spyware.\n- Antivirus suddenly disabled: Malware often disables security tools.\n- Unusual network activity: Malware may be sending your data to a remote attacker.\n- Files missing or encrypted: A strong sign of ransomware." },
             { "malware prevent",
               "How to Prevent Malware:\n\n- Keep software updated: Updates patch known vulnerabilities.\n- Use reputable antivirus software.\n- Avoid suspicious links and attachments.\n- Download only from trusted sources.\n- Back up your data regularly." },
             // Phishing sub-topics
             { "phishing types",
-              "Types of Phishing:\n\nSpear Phishing: Targeted at a specific individual using personalised details.\n\nSmishing: Phishing via SMS text messages.\n\nVishing: Voice phishing over phone calls impersonating banks or government.\n\nWhaling: Targeted at senior executives or high-value targets." },
+              "Types of Phishing:" +
+                "\n\nSpear Phishing: Targeted at a specific individual using personalised details." +
+                "\n\nSmishing: Phishing via SMS text messages." +
+                "\n\nVishing: Voice phishing over phone calls impersonating banks or government." +
+                "\n\nWhaling: Targeted at senior executives or high-value targets." },
             { "phishing detect",
-              "How to Detect Phishing:\n\n- Check sender email addresses for subtle misspellings.\n- Be suspicious of urgent language demanding immediate action.\n- Hover over links to preview the destination URL.\n- Look for generic greetings like 'Dear Customer'.\n- Watch for poor grammar or unusual formatting." },
+              "How to Detect Phishing:" +
+                "\n\n- Check sender email addresses for subtle misspellings." +
+                "\n- Be suspicious of urgent language demanding immediate action." +
+                "\n- Hover over links to preview the destination URL." +
+                "\n- Look for generic greetings like 'Dear Customer'." +
+                "\n- Watch for poor grammar or unusual formatting." },
             { "phishing prevent",
-              "How to Prevent Phishing:\n\n- Never click links in unsolicited emails.\n- Enable multi-factor authentication (MFA) on all accounts.\n- Use an email spam filter.\n- Report suspicious emails to your IT department.\n- Train yourself regularly to recognise phishing red flags." },
+              "How to Prevent Phishing:" +
+                "\n\n- Never click links in unsolicited emails." +
+                "\n- Enable multi-factor authentication (MFA) on all accounts." +
+                "\n- Use an email spam filter." +
+                "\n- Report suspicious emails to your IT department." +
+                "\n- Train yourself regularly to recognise phishing red flags." },
             // Password sub-topics
             { "password types",
-              "Types of Passwords and Authentication:\n\nPassphrase: A sequence of random words that is long and memorable.\n\nOne-Time Password (OTP): A temporary code valid for a single login.\n\nBiometric: Uses a physical trait (fingerprint, face ID).\n\nHardware Key: A physical device like a YubiKey." },
+              "Types of Passwords and Authentication:" +
+                "\n\nPassphrase: A sequence of random words that is long and memorable." +
+                "\n\nOne-Time Password (OTP): A temporary code valid for a single login." +
+                "\n\nBiometric: Uses a physical trait (fingerprint, face ID)." +
+                "\n\nHardware Key: A physical device like a YubiKey." },
             { "password detect",
-              "How to Detect a Compromised Password:\n\n- Unexpected login notifications or account activity.\n- Security alerts about credentials appearing in a data breach.\n- Use 'Have I Been Pwned' (haveibeenpwned.com) to check your email.\n- Sudden logouts or 'someone else is using your account' messages." },
+              "How to Detect a Compromised Password:" +
+                "\n\n- Unexpected login notifications or account activity." +
+                "\n- Security alerts about credentials appearing in a data breach." +
+                "\n- Use 'Have I Been Pwned' (haveibeenpwned.com) to check your email." +
+                "\n- Sudden logouts or 'someone else is using your account' messages." },
             { "password prevent",
-              "How to Keep Passwords Secure:\n\n- Use a unique, strong password for every account (12+ characters).\n- Use a password manager.\n- Enable multi-factor authentication.\n- Never share passwords via email or chat.\n- Change passwords immediately if you suspect a breach." },
+              "How to Keep Passwords Secure:" +
+                "\n\n- Use a unique, strong password for every account (12+ characters)." +
+                "\n- Use a password manager." +
+                "\n- Enable multi-factor authentication." +
+                "\n- Never share passwords via email or chat." +
+                "\n- Change passwords immediately if you suspect a breach." },
             // Firewall sub-topics
             { "firewall types",
-              "Types of Firewalls:\n\nPacket-Filtering: Inspects individual packets against rules.\n\nStateful: Tracks active connections and session state.\n\nApplication Layer (Proxy): Deep content filtering at the application level.\n\nNext-Generation (NGFW): Combines IPS, SSL inspection, and application awareness." },
+              "Types of Firewalls:" +
+                "\n\nPacket-Filtering: Inspects individual packets against rules." +
+                "\n\nStateful: Tracks active connections and session state." +
+                "\n\nApplication Layer (Proxy): Deep content filtering at the application level." +
+                "\n\nNext-Generation (NGFW): Combines IPS, SSL inspection, and application awareness." },
             { "firewall detect",
-              "How to Know If Your Firewall Is Working:\n\n- Check firewall logs for blocked or suspicious attempts.\n- Use an online port scanner to confirm unwanted ports are closed.\n- Monitor alerts from your firewall's management console.\n- Run periodic penetration tests to verify rules are enforced." },
+              "How to Know If Your Firewall Is Working:" +
+                "\n\n- Check firewall logs for blocked or suspicious attempts." +
+                "\n- Use an online port scanner to confirm unwanted ports are closed." +
+                "\n- Monitor alerts from your firewall's management console." +
+                "\n- Run periodic penetration tests to verify rules are enforced." },
             { "firewall prevent",
-              "Firewall Best Practices:\n\n- Keep firmware and rule sets up to date.\n- Block everything by default — allow only what is needed.\n- Segment your network so a breach cannot spread freely.\n- Audit firewall rules regularly to remove outdated entries.\n- Combine with an IDS/IPS for layered defence." },
+              "Firewall Best Practices:" +
+                "\n\n- Keep firmware and rule sets up to date." +
+                "\n- Block everything by default — allow only what is needed." +
+                "\n- Segment your network so a breach cannot spread freely." +
+                "\n- Audit firewall rules regularly to remove outdated entries." +
+                "\n- Combine with an IDS/IPS for layered defence." },
             // Scam sub-topics
             { "scam types",
-              "Types of Scams:\n\nAdvance-Fee Scam: Promises a large reward for a small upfront payment.\n\nTech Support Scam: Fake alerts trick you into paying for unnecessary 'fixes'.\n\nRomance Scam: Attackers build a fake relationship before requesting money.\n\nBusiness Email Compromise (BEC): Impersonates executives to redirect payments." },
+              "Types of Scams:" +
+                "\n\nAdvance-Fee Scam: Promises a large reward for a small upfront payment." +
+                "\n\nTech Support Scam: Fake alerts trick you into paying for unnecessary 'fixes'." +
+                "\n\nRomance Scam: Attackers build a fake relationship before requesting money." +
+                "\n\nBusiness Email Compromise (BEC): Impersonates executives to redirect payments." },
             { "scam detect",
-              "How to Detect a Scam:\n\n- Unsolicited contact asking for money or personal info is a red flag.\n- Verify unexpected requests through official channels.\n- Be sceptical of deals that seem too good to be true.\n- Watch for pressure tactics: 'Act now or lose your account!'\n- Legitimate organisations never ask for gift cards or wire transfers." },
+              "How to Detect a Scam:" +
+                "\n\n- Unsolicited contact asking for money or personal info is a red flag." +
+                "\n- Verify unexpected requests through official channels." +
+                "\n- Be sceptical of deals that seem too good to be true." +
+                "\n- Watch for pressure tactics: 'Act now or lose your account!'" +
+                "\n- Legitimate organisations never ask for gift cards or wire transfers." },
             { "scam prevent",
-              "How to Avoid Scams:\n\n- Never send money to someone you have not verified.\n- Enable spam filters on email and block suspicious numbers.\n- Educate yourself and others about common scam tactics.\n- Report scams to your national consumer protection authority.\n- Slow down — scammers rely on urgency to bypass your judgement." }
+              "How to Avoid Scams:" +
+                "\n\n- Never send money to someone you have not verified." +
+                "\n- Enable spam filters on email and block suspicious numbers." +
+                "\n- Educate yourself and others about common scam tactics." +
+                "\n- Report scams to your national consumer protection authority." +
+                "\n- Slow down — scammers rely on urgency to bypass your judgement." }
         };
 
         // Topic ask counter
@@ -157,6 +250,8 @@ namespace WPF_Chatbot
         {
             logo_grid.Visibility = Visibility.Hidden;
             username_grid.Visibility = Visibility.Visible;
+
+            
         }
 
         // Allow pressing Enter in the name box to submit
@@ -189,6 +284,8 @@ namespace WPF_Chatbot
             username_grid.Visibility = Visibility.Hidden;
             chats_grid.Visibility = Visibility.Visible;
 
+            PlayVoiceGreeting();
+
             AddBotMessage("Welcome, " + username + "! Ask me about phishing, malware, passwords, firewalls, or scams.");
             // End of submit names method
         }
@@ -212,7 +309,7 @@ namespace WPF_Chatbot
             // Show what the user typed in red
             AddUserMessage(message);
 
-            // ── Numbered menu: if a menu is active check if the user typed 1, 2, or 3
+            //Numbered menu: if a menu is active check if the user typed 1, 2, or 3
             if (activeMenu != null)
             {
                 string subKey;
@@ -232,7 +329,7 @@ namespace WPF_Chatbot
                 }
             }
 
-            // ── Memory: save favourite topic ─────────────────────────────────
+            // Memory: save favourite topic 
             if (message.Contains("interested in"))
             {
                 SaveToFile(message);
@@ -240,7 +337,7 @@ namespace WPF_Chatbot
                 return;
             }
 
-            // ── Memory: recall favourite topic ───────────────────────────────
+            // Memory: recall favourite topic
             if (message.Contains("favorite topic") || message.Contains("favourite topic"))
             {
                 if (File.Exists(memoryFile))
