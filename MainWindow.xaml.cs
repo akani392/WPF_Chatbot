@@ -543,8 +543,8 @@ namespace WPF_Chatbot
             chat_rtb.ScrollToEnd();
         }
 
-        // Adds a user message with a red sender label to the RichTextBox
-        private void AddUserMessage(string text)
+        // Adds a user message with a red sender label to the RichTextBox 
+        private void AddUserMessage(string text) 
         {
             Paragraph para = new Paragraph();
             para.Margin = new Thickness(0, 2, 0, 2);
