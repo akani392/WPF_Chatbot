@@ -45,6 +45,18 @@ namespace WPF_Chatbot
         string memoryFile = "memory.txt";  
         string currentTopic = "";
 
+
+        //part 3 codes
+        TaskRepo repo = new TaskRepo();
+
+        
+        // Tracks how many times each topic has been asked so we can offer deep-dives
+        Dictionary<string, int> topicAskCount = new Dictionary<string, int>();
+
+        // Task Assistant – handles add/view/delete/complete task commands
+        TaskAssistant taskAssistant = new TaskAssistant();
+
+
         // Colour for chat messages
         readonly Brush botColor = new SolidColorBrush(Color.FromRgb(33, 150, 243));  // blue  – ChatBot
         readonly Brush userColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));  // red   – user
@@ -329,8 +341,20 @@ namespace WPF_Chatbot
                 }
             }
 
+            // Task Assistant: check if this message is task-related before anything else
+            string taskReply;
+            if (taskAssistant.TryHandle(message, username, out taskReply))
+            {
+                AddBotMessage(taskReply);
+                questions_textbox.Clear();
+                return;
+            }
+
             // Memory: save favourite topic 
             if (message.Contains("interested in"))
+
+                // Memory: save favourite topic 
+                if (message.Contains("interested in"))
             {
                 SaveToFile(message);
                 questions_textbox.Clear();
