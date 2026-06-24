@@ -55,8 +55,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="QuizGame.cs" />
     <Compile Include="TaskAssistant.cs" />
-    <Compile Include="TaskRepo.cs" />
+    <Compile Include="TaskItem.cs" />
+    <Compile Include="TaskRepository.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

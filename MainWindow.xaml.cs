@@ -15,15 +15,12 @@ namespace WPF_Chatbot
     // Start of namespace
     public partial class MainWindow : Window
     {
-
         // Start of class
-        
 
-        //voice recording
+        // Voice recording
         public void PlayVoiceGreeting()
         {
-            //start voice recording
-
+            // Start of voice recording
             try
             {
                 SoundPlayer player = new SoundPlayer(@"recording/Recording2.wav");
@@ -34,57 +31,39 @@ namespace WPF_Chatbot
             {
                 Console.WriteLine("Error playing sound: " + ex.Message);
             }
-
-            //end of voice recording
+            // End of voice recording
         }
-
 
         // Class-level variables
         string username = "";
         Random random = new Random();
-        string memoryFile = "memory.txt";  
+        string memoryFile = "memory.txt";
         string currentTopic = "";
 
-
-        //part 3 codes
-        TaskRepo repo = new TaskRepo();
-
-        
-        // Tracks how many times each topic has been asked so we can offer deep-dives
+        //POE part 3 Task 1
+        // Tracks how many times each topic has been asked so we can offer 
         Dictionary<string, int> topicAskCount = new Dictionary<string, int>();
 
-        // Task Assistant – handles add/view/delete/complete task commands
+        // Task Assistant - handles add/view/delete/complete task commands
         TaskAssistant taskAssistant = new TaskAssistant();
 
+        //POE part 2 Task 2
+        QuizGame quizGame = new QuizGame();
 
         // Colour for chat messages
-        readonly Brush botColor = new SolidColorBrush(Color.FromRgb(33, 150, 243));  // blue  – ChatBot
-        readonly Brush userColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));  // red   – user
+        readonly Brush botColor = new SolidColorBrush(Color.FromRgb(33, 150, 243));  // blue  - ChatBot
+        readonly Brush userColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));  // red   - user
 
-        
         Dictionary<string, string> activeMenu = null;
 
-        // Keyword lookup – maps topic names to trigger words
+        // Keyword lookup - maps topic names to trigger words
         Dictionary<string, string[]> topicKeyWords = new Dictionary<string, string[]>()
         {
-            { 
-                "phishing",
-                new string[] 
-                { "phishing", "email", "lure"}
-            },
-            { "malware", 
-               new string[] 
-               { "malware",  "virus", "trojan","ransomware" } 
-            },
-            { "password", 
-               new string[] 
-               { "password", "credentials", "passphrase"   } },
-            { "firewall", 
-               new string[] 
-               { "firewall", "network barrier", "acl"      } },
-            { "scam",     
-               new string[] 
-               { "scam", "fraud", "social engineering"     } }
+            { "phishing", new string[] { "phishing", "email", "lure" } },
+            { "malware",  new string[] { "malware", "virus", "trojan", "ransomware" } },
+            { "password", new string[] { "password", "credentials", "passphrase" } },
+            { "firewall", new string[] { "firewall", "network barrier", "acl" } },
+            { "scam",     new string[] { "scam", "fraud", "social engineering" } }
         };
 
         // Main response dictionary
@@ -245,11 +224,6 @@ namespace WPF_Chatbot
                 "\n- Slow down — scammers rely on urgency to bypass your judgement." }
         };
 
-        // Topic ask counter
-        // Tracks how many times each topic has been asked so we can offer deep-dives
-        Dictionary<string, int> topicAskCount = new Dictionary<string, int>();
-
-      
         public MainWindow()
         {
             // Start of constructor
@@ -257,13 +231,11 @@ namespace WPF_Chatbot
             // End of constructor
         }
 
-        // Start chatbot – hide logo grid, show username entry grid
+        // Start chatbot - hide logo grid, show username entry grid
         private void start_Chatbot(object sender, RoutedEventArgs e)
         {
             logo_grid.Visibility = Visibility.Hidden;
             username_grid.Visibility = Visibility.Visible;
-
-            
         }
 
         // Allow pressing Enter in the name box to submit
@@ -273,7 +245,7 @@ namespace WPF_Chatbot
                 submit_names(sender, e);
         }
 
-        // Submit username – validate input then move to the chat screen
+        // Submit username - validate input then move to the chat screen
         private void submit_names(object sender, RoutedEventArgs e)
         {
             // Start of submit names method
@@ -298,7 +270,7 @@ namespace WPF_Chatbot
 
             PlayVoiceGreeting();
 
-            AddBotMessage("Welcome, " + username + "! Ask me about phishing, malware, passwords, firewalls, or scams.");
+            AddBotMessage("Welcome, " + username + "! Ask me about phishing, malware, passwords, firewalls, scamsmor add task");
             // End of submit names method
         }
 
@@ -309,7 +281,7 @@ namespace WPF_Chatbot
                 send_question(sender, e);
         }
 
-        // Send button – read input, display it, then get and display a bot reply
+        // Send button - read input, display it, then get and display a bot reply
         private void send_question(object sender, RoutedEventArgs e)
         {
             // Start of send question method
@@ -321,13 +293,13 @@ namespace WPF_Chatbot
             // Show what the user typed in red
             AddUserMessage(message);
 
-            //Numbered menu: if a menu is active check if the user typed 1, 2, or 3
+            // Numbered menu: if a menu is active check if the user typed 1, 2, or 3
             if (activeMenu != null)
             {
                 string subKey;
                 if (activeMenu.TryGetValue(message, out subKey))
                 {
-                    // Valid choice – show the deep-dive and close the menu
+                    // Valid choice - show the deep-dive and close the menu
                     activeMenu = null;
                     AddBotMessage(subTopicResponses[subKey]);
                     questions_textbox.Clear();
@@ -335,12 +307,14 @@ namespace WPF_Chatbot
                 }
                 else
                 {
-                    // Not 1/2/3 – close the menu and fall through to normal handling
+                    // Not 1/2/3 - close the menu and fall through to normal handling
                     activeMenu = null;
                     AddBotMessage("That wasn't a valid option. Continuing with your question...");
                 }
             }
 
+
+            //POE Part 3 Task 1
             // Task Assistant: check if this message is task-related before anything else
             string taskReply;
             if (taskAssistant.TryHandle(message, username, out taskReply))
@@ -350,11 +324,17 @@ namespace WPF_Chatbot
                 return;
             }
 
-            // Memory: save favourite topic 
-            if (message.Contains("interested in"))
+            //Quiz game function (POE Part 3 Task 2)
+            string quizReply;
+            if (quizGame.TryHandle(message, out quizReply))
+            {
+                AddBotMessage(quizReply);
+                questions_textbox.Clear();
+                return;
+            }
 
-                // Memory: save favourite topic 
-                if (message.Contains("interested in"))
+            // Memory: save favourite topi
+            if (message.Contains("interested in"))
             {
                 SaveToFile(message);
                 questions_textbox.Clear();
@@ -386,8 +366,7 @@ namespace WPF_Chatbot
             // End of send question method
         }
 
-
-        // Main entry point – ties together topic detection, sentiment, and follow-up handling
+        // Main entry point - ties together topic detection, sentiment, and follow-up handling
         public string GetChatbotResponse(string message)
         {
             // Start of chatbot response method
@@ -528,7 +507,6 @@ namespace WPF_Chatbot
             // End of get sentiment support method
         }
 
-
         // Saves the user's stated favourite topic to a local text file for later recall
         public void SaveToFile(string message)
         {
@@ -549,6 +527,7 @@ namespace WPF_Chatbot
         // Adds a bot message with a blue sender label to the RichTextBox
         private void AddBotMessage(string text)
         {
+            // Start of add bot message method
             Paragraph para = new Paragraph();
             para.Margin = new Thickness(0, 2, 0, 2);
 
@@ -565,11 +544,13 @@ namespace WPF_Chatbot
 
             chat_rtb.Document.Blocks.Add(para);
             chat_rtb.ScrollToEnd();
+            // End of add bot message method
         }
 
-        // Adds a user message with a red sender label to the RichTextBox 
-        private void AddUserMessage(string text) 
+        // Adds a user message with a red sender label to the RichTextBox
+        private void AddUserMessage(string text)
         {
+            // Start of add user message method
             Paragraph para = new Paragraph();
             para.Margin = new Thickness(0, 2, 0, 2);
 
@@ -585,6 +566,7 @@ namespace WPF_Chatbot
             para.Inlines.Add(body);
 
             chat_rtb.Document.Blocks.Add(para);
+            // End of add user message method
         }
 
         // Shows an inline validation error under the username text box
