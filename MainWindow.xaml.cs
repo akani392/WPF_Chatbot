@@ -34,7 +34,7 @@ namespace WPF_Chatbot
             // End of voice recording
         }
 
-        // ── Class-level variables ────────────────────────────────────────────────
+        //Class-level variables
 
         string username = "";
         Random random = new Random();
@@ -293,10 +293,52 @@ namespace WPF_Chatbot
             // End of show main menu method
         }
 
-        // Handles number input while the main menu is showing
+        // Handles number input while the main menu is showing.
+        // NLP is checked first so natural language typed from the menu
+        // routes directly to the right mode without needing a number.
         private void HandleMenuInput(string message)
         {
             // Start of handle menu input method
+
+            // NLP Task 3: detect intent from natural language BEFORE checking numbers.
+            // e.g. "set a reminder to change password" -> switches to task mode directly
+            NLPProcessor.NLPResult nlpResult = nlp.Analyse(message);
+
+            if (nlpResult.DetectedIntent == NLPProcessor.Intent.AddTask ||
+                nlpResult.DetectedIntent == NLPProcessor.Intent.ViewTasks ||
+                nlpResult.DetectedIntent == NLPProcessor.Intent.CompleteTask ||
+                nlpResult.DetectedIntent == NLPProcessor.Intent.DeleteTask)
+            {
+                currentMode = "task";
+                AddBotMessage("Switching to Task Assistant...");
+                HandleTaskMode(nlpResult.NormalisedCommand);
+                return;
+            }
+
+            if (nlpResult.DetectedIntent == NLPProcessor.Intent.StartQuiz)
+            {
+                currentMode = "quiz";
+                string quizReply;
+                quizGame.TryHandle("quiz", out quizReply);
+                AddBotMessage(quizReply);
+                return;
+            }
+
+            if (nlpResult.DetectedIntent == NLPProcessor.Intent.AskCyber)
+            {
+                currentMode = "cyber";
+                AddBotMessage("Switching to Cybersecurity Q&A...");
+                HandleCyberMode(message);
+                return;
+            }
+
+            if (nlpResult.DetectedIntent == NLPProcessor.Intent.ViewSummary)
+            {
+                AddBotMessage(activityLog.GetSummary());
+                return;
+            }
+
+            // No NLP intent matched - fall back to numbered menu selection
             switch (message.Trim())
             {
                 case "1":
@@ -317,13 +359,12 @@ namespace WPF_Chatbot
                     break;
 
                 default:
-                    AddBotMessage("Please type 1, 2, or 3 to choose an option.");
+                    AddBotMessage("Please type 1, 2, or 3 to choose an option, or just describe what you need.");
                     ShowMainMenu();
                     break;
             }
             // End of handle menu input method
         }
-
         // ── Mode: Cybersecurity Q&A ──────────────────────────────────────────────
 
         private void HandleCyberMode(string message)
@@ -473,10 +514,26 @@ namespace WPF_Chatbot
             {
                 AddBotMessage(quizReply);
 
-                // Quiz ended naturally - log it, return to the menu
-                if (quizReply.Contains("Quiz Complete") || quizReply.Contains("Quiz stopped"))
+                // Quiz ended naturally - log with score info, return to the menu
+                if (quizReply.Contains("Quiz Complete"))
                 {
-                    activityLog.AddEntry("Completed the Cybersecurity Quiz");
+                    // Extract the score line from the reply for the log entry
+                    string scoreLine = "";
+                    foreach (string line in quizReply.Split('\n'))
+                    {
+                        if (line.Contains("Final Score:"))
+                        {
+                            scoreLine = line.Trim();
+                            break;
+                        }
+                    }
+                    activityLog.AddEntry("Quiz completed — " + scoreLine);
+                    currentMode = "menu";
+                    ShowMainMenu();
+                }
+                else if (quizReply.Contains("Quiz stopped"))
+                {
+                    activityLog.AddEntry("Quiz stopped early by user");
                     currentMode = "menu";
                     ShowMainMenu();
                 }

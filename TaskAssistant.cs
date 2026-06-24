@@ -13,8 +13,8 @@ namespace WPF_Chatbot
         TaskRepository repository = new TaskRepository();
 
         // State flags - only one is true at a time, same idea as activeMenu in MainWindow
-        bool awaitingMenuChoice = false;  // bot just showed the task menu
-        bool awaitingTaskTitle = false;  // bot just asked "what is the task title?"
+        bool awaitingMenuChoice = false;  
+        bool awaitingTaskTitle = false;  
         bool awaitingReminderResponse = false;  
 
         // Holds the task being built across multiple turns of conversation
@@ -108,7 +108,7 @@ namespace WPF_Chatbot
 
             if (string.IsNullOrWhiteSpace(title))
             {
-                awaitingTaskTitle = true; // stay in title state and ask again
+                awaitingTaskTitle = true; 
                 return "Please enter a valid task title.";
             }
 
@@ -144,7 +144,7 @@ namespace WPF_Chatbot
             if (message.Contains("yes"))
             {
                 Match match = Regex.Match(message, @"(\d+)\s*day");
-                int days = match.Success ? int.Parse(match.Groups[1].Value) : 7; // default 7 days if no number given
+                int days = match.Success ? int.Parse(match.Groups[1].Value) : 7; 
                 reminderDate = DateTime.Now.AddDays(days);
             }
 
@@ -216,8 +216,6 @@ namespace WPF_Chatbot
             // End of try complete task method
         }
 
-        // Deletes the task number the user mentioned
-        // Supports "delete 2" or "delete task 2"
         public bool TryDeleteTask(string message, string username, out string reply)
         {
             // Start of try delete task method
@@ -252,7 +250,7 @@ namespace WPF_Chatbot
             // End of extract task id method
         }
 
-        // Capitalises the first letter of a task title for nicer display
+        
         string CapitaliseFirst(string text)
         {
             // Start of capitalise first method

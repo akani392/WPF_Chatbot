@@ -8,7 +8,6 @@ namespace WPF_Chatbot
     //start of namspace
     public class TaskRepository
     {
-        //start of class
 
         //start of class
 

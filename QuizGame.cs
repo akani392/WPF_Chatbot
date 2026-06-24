@@ -20,15 +20,14 @@ namespace WPF_Chatbot
         class Question
         {
             // Start of question class
-            public string Text { get; set; }  // the question shown to the user
-            public string Options { get; set; }  // formatted A/B/C/D or True/False options
-            public string Answer { get; set; }  // correct answer key e.g. "c" or "true"
-            public string Explanation { get; set; } // short explanation shown after answering
+            public string Text { get; set; }  
+            public string Options { get; set; }  
+            public string Answer { get; set; }  
+            public string Explanation { get; set; } 
             // End of question class
         }
 
-        // The full list of quiz questions - more than 10 as required, mixing
-        // multiple-choice (A/B/C/D) and true/false formats
+        
         List<Question> questions = new List<Question>()
         {
             // Multiple choice 
