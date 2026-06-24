@@ -54,6 +54,8 @@ namespace WPF_Chatbot
         // Feature class instances
         TaskAssistant taskAssistant = new TaskAssistant();
         QuizGame quizGame = new QuizGame();
+        NLPProcessor nlp = new NLPProcessor();   // Task 3: intent detection
+        ActivityLog activityLog = new ActivityLog();    // Task 3: action history
 
         // Colours for chat messages
         readonly Brush botColor = new SolidColorBrush(Color.FromRgb(33, 150, 243));  // blue - ChatBot
@@ -229,6 +231,15 @@ namespace WPF_Chatbot
 
             AddUserMessage(message);
 
+            // NLP: summary can be requested from any mode
+            NLPProcessor.NLPResult globalNlp = nlp.Analyse(message);
+            if (globalNlp.DetectedIntent == NLPProcessor.Intent.ViewSummary)
+            {
+                AddBotMessage(activityLog.GetSummary());
+                questions_textbox.Clear();
+                return;
+            }
+
             // "00" always returns to the main menu from any mode
             if (message == "00")
             {
@@ -336,6 +347,33 @@ namespace WPF_Chatbot
                 }
             }
 
+            // NLP Task 3: run intent detection so users can phrase requests naturally
+            // e.g. "remind me to check my firewall" is recognised as an add-task intent
+            NLPProcessor.NLPResult nlpResult = nlp.Analyse(message);
+
+            // If the user expressed a task intent while in cyber mode, switch modes
+            if (nlpResult.DetectedIntent == NLPProcessor.Intent.AddTask)
+            {
+                currentMode = "task";
+                HandleTaskMode(nlpResult.NormalisedCommand);
+                return;
+            }
+
+            // If the user asked for the quiz while in cyber mode, switch modes
+            if (nlpResult.DetectedIntent == NLPProcessor.Intent.StartQuiz)
+            {
+                currentMode = "quiz";
+                HandleQuizMode("quiz");
+                return;
+            }
+
+            // If the user asked what actions have been taken, show the activity log
+            if (nlpResult.DetectedIntent == NLPProcessor.Intent.ViewSummary)
+            {
+                AddBotMessage(activityLog.GetSummary());
+                return;
+            }
+
             // Memory: save favourite topic
             if (message.Contains("interested in"))
             {
@@ -353,38 +391,77 @@ namespace WPF_Chatbot
                 return;
             }
 
-            // Normal topic/sentiment response
-            AddBotMessage(GetChatbotResponse(message));
+            // Normal topic/sentiment response - log what was discussed
+            string cyberReply = GetChatbotResponse(message);
+            AddBotMessage(cyberReply);
+
+            if (!string.IsNullOrEmpty(currentTopic))
+                activityLog.AddEntry("Discussed cybersecurity topic: " + currentTopic);
             // End of handle cyber mode method
         }
-
         // ── Mode: Task Assistant ─────────────────────────────────────────────────
 
         private void HandleTaskMode(string message)
         {
             // Start of handle task mode method
+
+            // NLP Task 3: detect natural-language task requests before direct commands
+            // e.g. "Add a task to enable 2FA" or "Remind me to update my password tomorrow"
+            NLPProcessor.NLPResult nlpResult = nlp.Analyse(message);
+
+            // Use the normalised command if NLP found a clearer interpretation
+            string commandToProcess = message;
+            if (nlpResult.DetectedIntent == NLPProcessor.Intent.AddTask ||
+                nlpResult.DetectedIntent == NLPProcessor.Intent.ViewTasks ||
+                nlpResult.DetectedIntent == NLPProcessor.Intent.CompleteTask ||
+                nlpResult.DetectedIntent == NLPProcessor.Intent.DeleteTask)
+            {
+                commandToProcess = nlpResult.NormalisedCommand;
+            }
+
+            // If user asked for the activity summary while in task mode
+            if (nlpResult.DetectedIntent == NLPProcessor.Intent.ViewSummary)
+            {
+                AddBotMessage(activityLog.GetSummary());
+                return;
+            }
+
             string taskReply;
 
             // TryHandle covers the menu, title input, and reminder follow-up
-            if (taskAssistant.TryHandle(message, username, out taskReply))
+            if (taskAssistant.TryHandle(commandToProcess, username, out taskReply))
             {
                 AddBotMessage(taskReply);
+
+                // Log meaningful task actions to the activity log
+                if (commandToProcess.StartsWith("add task"))
+                    activityLog.AddEntry("Task added: '" + nlpResult.ExtractedTitle + "'" +
+                        (nlpResult.ExtractedDays.HasValue
+                            ? " with reminder in " + nlpResult.ExtractedDays + " day(s)"
+                            : ""));
+
                 return;
             }
 
             // Complete and delete shortcuts shown after menu options 3 and 4
             string actionReply;
-            if (taskAssistant.TryCompleteTask(message, username, out actionReply) ||
-                taskAssistant.TryDeleteTask(message, username, out actionReply))
+            if (taskAssistant.TryCompleteTask(commandToProcess, username, out actionReply))
             {
                 AddBotMessage(actionReply);
+                activityLog.AddEntry("Completed a task");
+                return;
+            }
+
+            if (taskAssistant.TryDeleteTask(commandToProcess, username, out actionReply))
+            {
+                AddBotMessage(actionReply);
+                activityLog.AddEntry("Deleted a task");
                 return;
             }
 
             AddBotMessage("Type \"tasks\" to see the Task Assistant menu, or 00 to return to the main menu.");
             // End of handle task mode method
         }
-
         // ── Mode: Quiz ───────────────────────────────────────────────────────────
 
         private void HandleQuizMode(string message)
@@ -396,16 +473,16 @@ namespace WPF_Chatbot
             {
                 AddBotMessage(quizReply);
 
-                // Quiz ended naturally - offer the menu again
+                // Quiz ended naturally - log it, return to the menu
                 if (quizReply.Contains("Quiz Complete") || quizReply.Contains("Quiz stopped"))
                 {
+                    activityLog.AddEntry("Completed the Cybersecurity Quiz");
                     currentMode = "menu";
                     ShowMainMenu();
                 }
             }
             // End of handle quiz mode method
         }
-
         // ── Chatbot logic (used in cyber mode) ───────────────────────────────────
 
         // Main entry point - ties together topic detection, sentiment, and follow-up
@@ -449,15 +526,15 @@ namespace WPF_Chatbot
             {
                 activeMenu = new Dictionary<string, string>
                 {
-                    {"1", topic + " types"},
-                    {"2", topic + " detect"},
-                    {"3", topic + " prevent"}
+                    { "1", topic + " types"   },
+                    { "2", topic + " detect"  },
+                    { "3", topic + " prevent" }
                 };
 
                 return "You have asked a lot about " + topic + "! Would you like to go deeper?\n\n" +
-                       "Reply 1 - Types of " + topic + "\n" +
-                       "Reply 2 - How to detect " + topic + "\n" +
-                       "Reply 3 - How to prevent " + topic;
+                       "  Reply 1  -  Types of " + topic + "\n" +
+                       "  Reply 2  -  How to detect " + topic + "\n" +
+                       "  Reply 3  -  How to prevent " + topic;
             }
 
             string[] responses = chatbotResponses[topic];
