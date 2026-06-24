@@ -56,9 +56,8 @@ namespace WPF_Chatbot
         QuizGame quizGame = new QuizGame();
 
         // Colours for chat messages
-        readonly Brush botColor = new SolidColorBrush(Color.FromRgb(33, 150, 243));  // blue  - ChatBot
-        readonly Brush userColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));   // red   - user
-        readonly Brush menuColor = new SolidColorBrush(Color.FromRgb(255, 193, 7));   // amber - menu headings
+        readonly Brush botColor = new SolidColorBrush(Color.FromRgb(33, 150, 243));  // blue - ChatBot
+        readonly Brush userColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));   // red  - user
 
         // Numbered deep-dive menu for cybersecurity topics (existing Part 1/2 feature)
         Dictionary<string, string> activeMenu = null;
@@ -450,15 +449,15 @@ namespace WPF_Chatbot
             {
                 activeMenu = new Dictionary<string, string>
                 {
-                    { "1", topic + " types"   },
-                    { "2", topic + " detect"  },
-                    { "3", topic + " prevent" }
+                    {"1", topic + " types"},
+                    {"2", topic + " detect"},
+                    {"3", topic + " prevent"}
                 };
 
                 return "You have asked a lot about " + topic + "! Would you like to go deeper?\n\n" +
-                       "  Reply 1  -  Types of " + topic + "\n" +
-                       "  Reply 2  -  How to detect " + topic + "\n" +
-                       "  Reply 3  -  How to prevent " + topic;
+                       "Reply 1 - Types of " + topic + "\n" +
+                       "Reply 2 - How to detect " + topic + "\n" +
+                       "Reply 3 - How to prevent " + topic;
             }
 
             string[] responses = chatbotResponses[topic];
@@ -571,13 +570,15 @@ namespace WPF_Chatbot
             Paragraph para = new Paragraph();
             para.Margin = new Thickness(0, 4, 0, 4);
 
+            // White bold "MENU" label
             Run label = new Run("MENU\n");
-            label.Foreground = menuColor;
+            label.Foreground = Brushes.White;
             label.FontWeight = FontWeights.Bold;
             para.Inlines.Add(label);
 
+            // White menu body text
             Run body = new Run(text);
-            body.Foreground = menuColor;
+            body.Foreground = Brushes.White;
             para.Inlines.Add(body);
 
             chat_rtb.Document.Blocks.Add(para);
